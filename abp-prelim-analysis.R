@@ -1,4 +1,7 @@
 # KAOS air-breathing predator preliminary analysis
+#Lisa-Marie Harrison
+#07/08/2014
+
 setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data")
 dat <- read.csv(file = "kaos_formatted.csv", header = T, fill = T)
 dat$Latitude <- as.numeric(as.character(dat$Latitude))
