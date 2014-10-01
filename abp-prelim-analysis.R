@@ -7,9 +7,8 @@
 setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data")
 dat   <- read.csv(file = "kaos_formatted.csv", header = T, fill = T) #abp observations
 track <- read.csv(file  = "kaos_cruise_track.csv", header = T) #location of cruise track
-acoustic_38  <- read.csv(file = "kaos_38_sv.csv", header = T) #50x10m integration interval
-acoustic_120 <- read.csv(file = "kaos_120_sv.csv", header = T) #50x10m integration interval
-sc <- read.csv(file = "schools_detection_38.csv", header = T)
+acoustic_38  <- read.csv(file = "38kHz_false_bottom_removed.csv", header = T) #50x10m integration interval
+acoustic_120 <- read.csv(file = "120kHz_false_bottom_removed.csv", header = T) #50x10m integration interval
 phyto <- read.csv(file = "kaos_underway_fluoro.csv", header = T)
 library(chron)
 library(oce)
@@ -60,37 +59,36 @@ title("Cruise track (black) with sighting locations superimposed (red)")
 #calculate 120kHz - 38kHz for each 10x50 window
 sv_38 <- acoustic_38$Sv_mean
 sv_120 <- acoustic_120$Sv_mean
-sv_38[sv_38 < -500] <- NA
-sv_120[sv_120 < -500] <- NA
+sv_38[sv_38 > 500 | sv_38 < -500] <- NA
+sv_120[sv_120 > 500 | sv_120 < -500] <- NA
 sv_diff <- sv_120 - sv_38
 
 int_depth <- acoustic_38$Depth_mean
 int_time  <- acoustic_38$Time_M
 int_date  <- acoustic_38$Date_M
+int_lat  <- acoustic_38$Lat_S[seq(1, length(acoustic_38$Lat_S), by = 25)]
+int_long  <- acoustic_38$Lon_E[seq(1, length(acoustic_38$Lon_S), by = 25)]
 int_td <- paste(int_date, int_time) #date time for each integration interval
 
 #histogram of mean Sv in each interval
 #red lines show min and max cutoff for krill
 hist(sv_diff)
 abline(v = c(2, 12), col = "red")
-#write.csv(sv_diff, "sv_diff_na.csv", row.names = F)
 
-#remove 120 - 38 kHz values outside of [2, 12] because these are unlikely to be krill
-sv_diff[sv_diff < 2 | sv_diff > 12] <- NA
-nasc_120 <- acoustic_120$NASC
-nasc_120[sv_diff == NA] <- 0
-nasc_120[int_depth < 10] <- 0 #remove the first interval because of noise
-nasc_120[acoustic_120$Good_samples < 2000] <- 0 
+#remove 120 - 38 kHz values outside of [1.02, 14.75] because these are unlikely to be krill
+#dB difference window is from Potts AAD report for KAOS data
+sv_diff[sv_diff < 1.02 | sv_diff > 14.75] <- NA
+sv_120[is.na(sv_diff)] <- NA
 
 #convert to density using target strength
-#use 0.028*sv_120 (Demer & Hewitt 1995) as an approximation of krill lengths
-p <- nasc_120*0.028 #average volumetric density/interval
-b <- (p*10*50)/1000 #biomass in kg/interval
+p <- 10 *exp((sv_120 - -42.22)/10)
+b <- (p*5*140)/1000 #biomass in kg/interval
 
 
 #sum density through depths for each time point to find biomass in water column at each time
 pt <- colSums(matrix(b, nrow = 25), na.rm = T)
-plot(ksmooth(c(1:length(pt)), pt, bandwidth = 7), type = "l")
+plot(ksmooth(c(1:length(pt)), pt, bandwidth = 15), type = "l")
+
 
 #------------------------------------------------------------------------------#
 
@@ -106,10 +104,10 @@ t_s <- chron(times. = as.character(int.start.time), format = "h:m:s")
 t_e <- chron(times. = as.character(int.end.time), format = "h:m:s")
 
 #find latitude, longitude and time at the middle of each interval
-int.lat.mid <- acoustic_38$Lat_M[seq(1, length(acoustic_38$Lat_M), by = 25)]
-int.long.mid  <- acoustic_38$Lon_M[seq(1, length(acoustic_38$Lon_M), by = 25)]
-int.time.mid <- acoustic_38$Time_M[seq(1, length(acoustic_38$Time_M), by = 25)]
-int.date.mid <- acoustic_38$Date_M[seq(1, length(acoustic_38$Date_M), by = 25)]
+int.lat.mid <- acoustic_120$Lat_M[seq(1, length(acoustic_120$Lat_M), by = 25)]
+int.long.mid  <- acoustic_120$Lon_M[seq(1, length(acoustic_120$Lon_M), by = 25)]
+int.time.mid <- acoustic_120$Time_M[seq(1, length(acoustic_120$Time_M), by = 25)]
+int.date.mid <- acoustic_120$Date_M[seq(1, length(acoustic_120$Date_M), by = 25)]
 
 #find time at middle of integration interval and remove : and .
 t_m <- gsub("[: -]", "" , int.time.mid, perl=TRUE)
@@ -120,6 +118,7 @@ t_axt <- as.numeric(substr(t_m, start = 1, stop = 4))
 t.str <- strptime(paste(int.date.mid, int.time.mid), format='%Y%m%d %H:%M:%S', tz = "UTC")
 sun.angle <- sunAngle(t.str, int.long.mid, int.lat.mid) 
 light.level <- sun.angle$altitude
+light.level[is.na(as.character(t.str))] <- NA
 h.str <- as.numeric(format(t.str, "%H")) + as.numeric(format(t.str, "%M"))/60
 plot(h.str, light.level)
 
@@ -129,11 +128,11 @@ plot(h.str, light.level)
 #assign predator sightings to intervals
 #pred is a 0 1 vector of whether there any sightings during an interval
 #multiple sightings are not reported, only presence/absence of sightings
-pred <- rep(0, length(unique(int_td)))
+pred <- rep(0, length(t_e))
 for (i in 1:length(dat_sub$d)) {
 
   w <- which(int_d == dat_sub$d[i] & t_e >= as.character(dat_sub$t[i])
-             & t_s <= as.character(dat_sub$t[i]))[1]
+             & t_s < as.character(dat_sub$t[i]))[1]
   pred[w] <- 1
 }
 
@@ -249,7 +248,7 @@ fluoro <- phyto$FLUORESCENCE_NOUNIT[phyto$Date >= 20030115 & phyto$Date <= 20030
 fluoro.date <- phyto$Date[phyto$Date >= 20030115 & phyto$Date <= 20030117]
 fluoro.time <- phyto$Time[phyto$Date >= 20030115 & phyto$Date <= 20030117]
 
-#bin underway fluorescence data into 50m intervals using krill interval times
+#bin underway fluorescence data into 50ping intervals using krill interval times
 #calculate average fluorescence throughout each interval
 #surface intervals have an average depth of 8m
 fluoro.sum <- rep(0, length(t_s))
@@ -267,30 +266,15 @@ fluoro.sum[fluoro.sum == 0] <- NA #remove zero values because they are data defi
 
 #plot krill biomass in each interval with summed fluorescence and predator locations overlayed
 #krill biomass is summed through all depths during the integration interval
-plot(ksmooth(c(1:length(pt)), pt, bandwidth = 50)$y, xlab = "time of day", ylab = "krill density", xaxt = "n")
-points(fluoro.sum, col = "red")
-points(light.level, col = "orange", type = "l", lwd = 2)
+plot(ksmooth(c(1:length(pt)), pt, bandwidth = 10)$y, xlab = "time of day", ylab = "krill density", xaxt = "n")
+points(fluoro.sum/50, col = "red")
+points(light.level/100, col = "orange", type = "l", lwd = 2)
 abline(v = which(pred == 1), col = "blue")
-title("Krill density (black), phytoplankton fluorescence*100 (red), predator locations (blue) and light levels (yellow)")
+title("Krill density (black), phytoplankton fluorescence (red), predator locations (blue) and light levels (yellow)")
 axis(1, at = seq(1, length(pt), by = 100), labels = t_axt[seq(1, length(pt), by = 100)])
 
-plot(ksmooth(c(1:length(pt)), pt, bandwidth = 50), type = "l")
-points(fluoro.sum*10, col = "red")
 
-plot(fluoro.sum, ksmooth(c(1:length(pt)), pt, bandwidth = 50)$y)
-
-
-plot(krill_times*40)
-points(fluoro.sum, col = "red")
-
-#find times when phytoplankton blooms occur
-bloom.times <- t_s[which(fluoro.sum > 15)]
-
-#plot variables against light level
-plot(light.level, pt, xlab = "light level", ylab = "krill biomass (g)")
-plot(light.level, fluoro.sum, xlab = "light level", ylab = "fluorescence")
-
-
+#write.csv(cbind(pt, fluoro.sum, light.level, pred), "kaos_data.csv", row.names = F)
 
 
 
