@@ -1,4 +1,4 @@
-#For each day of the KAOS survey export integration intervals in Echoview
+#For each day of the KAOS survey export integration by cells in Echoview
 #Author: Lisa-Marie Harrison
 #Date: 01/10/2014
 library(RDCOMClient)
@@ -17,9 +17,18 @@ EVAddCalibrationFile(EVFile, "038-120-200", "C:/Users/43439535/Desktop/RAW/20120
 
 #add regions definition file
 EVImportRegionDef(EVFile = EVFile, evrFile = "C:/Users/43439535/Documents/Lisa/KAOS/regions/aggregations.evr", "false_bottom_regions")
+EVImportRegionDef(EVFile = EVFile, evrFile = "C:/Users/43439535/Documents/Lisa/KAOS/regions/off_transect.evr", "off_transect")
+
+#add extra regions definitions files for off transect times
+off_transect_files <- list.files("C:/Users/43439535/Documents/Lisa/KAOS/regions/off transect", full.names = T)
+
+for (i in 1:length(off_transect_files)) {
+  EVImportRegionDef(EVFile = EVFile, evrFile = off_transect_files[i], "off_transect")
+}
+
 
 #loop over each date and export integration by cells separately
-for (i in 2:length(file.dates)) {
+for (i in 1:length(file.dates)) {
     
   #clear raw data from fileset
   EVClearRawData(EVFile, "038-120-200")
@@ -30,16 +39,16 @@ for (i in 2:length(file.dates)) {
 
   #change grid of 38kHz and 120kHz to 5m * 50 pings
   varObj = EVAcoVarNameFinder(EVFile, acoVarName = "38 seabed and surface excluded")$EVVar
-  EVChangeVariableGrid(EVFile = EVFile, acousticVar = varObj, horizontalType = 4, horizontalDistance = 50, verticalType = 1, verticalDistance = 5)
+  EVChangeVariableGrid(EVFile = EVFile, acousticVar = varObj, verticalType = 4, verticalDistance = 50, horizontalType = 1, horizontalDistance = 5)
   varObj = EVAcoVarNameFinder(EVFile, acoVarName = "120 seabed and surface excluded")$EVVar
-  EVChangeVariableGrid(EVFile = EVFile, acousticVar = varObj, horizontalType = 4, horizontalDistance = 50, verticalType = 1, verticalDistance = 5)
+  EVChangeVariableGrid(EVFile = EVFile, acousticVar = varObj, verticalType = 4, verticalDistance = 50, horizontalType = 1, horizontalDistance = 5)
   
   #export integration by cells for 38kHz and 120kHz
   return.file.38 <- paste("C:/Users/43439535/Documents/Lisa/KAOS/exported_integrations/kaos_38kHz_integration_", file.dates[i], ".csv", sep = "")
   return.file.120 <- paste("C:/Users/43439535/Documents/Lisa/KAOS/exported_integrations/kaos_120kHz_integration_", file.dates[i], ".csv", sep = "")
   EVExportIntegrationByCells(EVFile = EVFile, variableName = "38 seabed and surface excluded", filePath = return.file.38)
   EVExportIntegrationByCells(EVFile = EVFile, variableName = "120 seabed and surface excluded", filePath = return.file.120)
-  
+    
 }
 
 
