@@ -1,6 +1,6 @@
 
 #function to find date and time of start of CTD drop
-region_times <- read.csv(file = "C:/Users/43439535/Documents/Lisa/KAOS/regions/off_transect_times.csv")
+region_times <- read.csv(file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/off_transect_times.csv")[1:63, ]
 
 EVRegionTimes <- function(region_times){
   
