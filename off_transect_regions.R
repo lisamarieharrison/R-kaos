@@ -1,3 +1,4 @@
+library(chron)
 
 #function to find date and time of start of CTD drop
 region_times <- read.csv(file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/off_transect_times.csv")[1:63, ]
@@ -35,10 +36,10 @@ for (i in 1:nrow(region_times)) {
   line_6 <- "0"
   line_7 <- "off_transect"
   line_8 <- paste(start_date[i], start_time[i],  "0", start_date[i], start_time[i],  "250", end_date[i], end_time[i], "250", end_date[i], end_time[i], "0", "0", sep = " ")
-  line_9 <- paste("region_", start_time, sep = "")
+  line_9 <- paste("region_", i, sep = "")
   file_lines <- c(line_1, line_2, line_3, line_4, line_5, line_6, line_7, line_8, line_9)
   
-  file_name <- paste("C:/Users/43439535/Documents/Lisa/KAOS/regions/off transect/", start_date[i], "_", start_time[i], ".evr", sep = "")
+  file_name <- paste("C:/Users/Lisa/Desktop/KAOS/off transect regions/", start_date[i], "_", start_time[i], ".evr", sep = "")
   dummy.def <- file(file_name, 'w')
   for (j in 1:9){
     writeLines(file_lines[j], con = dummy.def)
