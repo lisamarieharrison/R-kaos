@@ -12,6 +12,7 @@ for(i in 1:length(kaos_dates)) {
   med <- read.csv(paste("medium_aggregations_by_region", kaos_dates[i], ".csv", sep = ""), header = T)
   low <- read.csv(paste("low_aggregations_by_region", kaos_dates[i], ".csv", sep = ""), header= T)
   pred <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/kaos_20030115_20030125_abp.csv")
+  off_transect <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/off_transect_times.csv")
   
   #put all densities into one list
   krill <- list(high, med, low)
@@ -35,6 +36,11 @@ for(i in 1:length(kaos_dates)) {
     
   }
   
+  #subset off transect to only include current date and change times to chron object
+  off_transect <- off_transect[off_transect$start_date == kaos_dates[i], ]
+  off_transect$start_time <- chron(times. = off_transect$start_time, format = "h:m:s")
+  off_transect$end_time <- chron(times. = off_transect$end_time, format = "h:m:s")
+  
   #plot krill swarm location at each density by depth and time  
   plot(c(krill["high"][[1]]$Time_S[1], krill["high"][[1]]$Time_E[1]), c(krill["high"][[1]]$Depth_mean[1], krill["high"][[1]]$Depth_mean[1]), type = "l", xlim = c(min(krill["low"][[1]]$Time_S), max(krill["low"][[1]]$Time_E)), lwd = 2, xaxt = "n", ylim = c(100, 0), yaxt = "n", xlab = "time", ylab = "swarm", col = "white")
   for (j in 1:nrow(low)) {
@@ -47,6 +53,11 @@ for(i in 1:length(kaos_dates)) {
      points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(krill["high"][[1]]$Depth_mean[j], krill["high"][[1]]$Depth_mean[j]), type = "l", lwd = 7, col = "red")    
   }
   title(paste("Date", kaos_dates[i]))
+  
+  #add off transect times
+  for (j in 1:nrow(off_transect)) {
+    rect(off_transect$start_time[j], 100, off_transect$end_time[j], 0, col = "gray95", lty = 0)
+  }
   
   axis(1, at = seq(from = min(krill["low"][[1]]$Time_S), to = max(krill["low"][[1]]$Time_E), length.out = 10), 
        labels = chron(times. = seq(from = chron(times. = min(krill["low"][[1]]$Time_S), format = "h:m:S"), to = chron(times. = max(krill["low"][[1]]$Time_E), format = "h:m:s"), length.out = 10)))
