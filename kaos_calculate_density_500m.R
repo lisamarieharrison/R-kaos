@@ -1,6 +1,6 @@
 #read in each kaos integration by cells file and calculate density for each integration interval
 #write into a single file
-#uses only data from 0-100m depth for density calculations
+#specify maximum depth layer to integrate to
 #Author: Lisa-Marie Harrison
 #Date: 18/10/2014
 
@@ -9,8 +9,9 @@ setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/exported_integ
 #get dates of files in folder
 survey.dates <- as.numeric(substr(list.files(path = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/exported_integrations_500m", pattern = paste("(", "38kHz", ").*\\.csv$", sep = ""), full.names = F), start = 24, stop = 31))
 
-#for each date, read in the 38 and 120kHz files and process the data
+depth_layer <- 6
 
+#for each date, read in the 38 and 120kHz files and process the data
 for (i in 1:length(survey.dates)) {
   
   
@@ -26,9 +27,9 @@ for (i in 1:length(survey.dates)) {
   acoustic_38 <- acoustic_38[acoustic_38$Layer > 0, ]
   acoustic_120 <- acoustic_120[acoustic_120$Layer > 0, ]  
   
-  #remove values at less than 30m depth (mean adelie penguin foraging depth)
-  acoustic_38 <- acoustic_38[acoustic_38$Layer <= 6, ]
-  acoustic_120 <- acoustic_120[acoustic_120$Layer <= 6, ]  
+  #remove values at less than specified depth 
+  acoustic_38 <- acoustic_38[acoustic_38$Layer <= depth_layer, ]
+  acoustic_120 <- acoustic_120[acoustic_120$Layer <= depth_layer, ]  
   
   
   #calculate 120kHz - 38kHz for each 10x50 window
