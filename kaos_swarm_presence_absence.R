@@ -22,6 +22,9 @@ for(i in 1:length(kaos_dates)) {
     #exclude other dates
     krill[j][[1]] <- krill[j][[1]][krill[j][[1]]$Date_S == kaos_dates[i] & krill[j][[1]]$Date_E == kaos_dates[i], ]
     
+    #remove null values (-999)
+    krill[j][[1]] <- krill[j][[1]][which(krill[j][[1]]$Sv_mean != -999), ]
+    
     #convert krill times to a chron object
     krill[j][[1]]$Time_S <- chron(times. = krill[j][[1]]$Time_S, format = "h:m:s")
     krill[j][[1]]$Time_E <- chron(times. = krill[j][[1]]$Time_E, format = "h:m:s")
