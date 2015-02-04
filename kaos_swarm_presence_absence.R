@@ -31,19 +31,22 @@ for(i in 1:length(kaos_dates)) {
     
   }
   
-    
-  plot(c(krill["high"][[1]]$Time_S[1], krill["high"][[1]]$Time_E[1]), c(3, 3), type = "l", xlim = c(min(krill["low"][[1]]$Time_S), max(krill["low"][[1]]$Time_E)), lwd = 2, xaxt = "n", ylim = c(0, 4), yaxt = "n", xlab = "time", ylab = "swarm")
+  #plot krill swarm location at each density by depth and time  
+  plot(c(krill["high"][[1]]$Time_S[1], krill["high"][[1]]$Time_E[1]), c(krill["high"][[1]]$Depth_mean[1], krill["high"][[1]]$Depth_mean[1]), type = "l", xlim = c(min(krill["low"][[1]]$Time_S), max(krill["low"][[1]]$Time_E)), lwd = 2, xaxt = "n", ylim = c(250, 0), yaxt = "n", xlab = "time", ylab = "swarm", col = "white")
   for (j in 1:nrow(low)) {
-    points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(3, 3), type = "l", lwd = 5, col = "red")
-    points(c(krill["med"][[1]]$Time_S[j], krill["med"][[1]]$Time_E[j]), c(2, 2), type = "l", lwd = 5, col = "orange")
-    points(c(krill["low"][[1]]$Time_S[j], krill["low"][[1]]$Time_E[j]), c(1, 1), type = "l", lwd = 5)
-    
+    points(c(krill["low"][[1]]$Time_S[j], krill["low"][[1]]$Time_E[j]), c(krill["low"][[1]]$Depth_mean[j], krill["low"][[1]]$Depth_mean[j]), type = "l", lwd = 5, cex = 2)
+   }
+  for (j in 1:nrow(low)) {
+    points(c(krill["med"][[1]]$Time_S[j], krill["med"][[1]]$Time_E[j]), c(krill["med"][[1]]$Depth_mean[j], krill["med"][[1]]$Depth_mean[j]), type = "l", lwd = 5, col = "darkorange", cex = 2)
+  }
+  for (j in 1:nrow(low)) {
+     points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(krill["high"][[1]]$Depth_mean[j], krill["high"][[1]]$Depth_mean[j]), type = "l", lwd = 5, col = "red", cex = 2)    
   }
   title(paste("Date", kaos_dates[i]))
   
   axis(1, at = seq(from = min(krill["low"][[1]]$Time_S), to = max(krill["low"][[1]]$Time_E), length.out = 10), 
        labels = chron(times. = seq(from = chron(times. = min(krill["low"][[1]]$Time_S), format = "h:m:S"), to = chron(times. = max(krill["low"][[1]]$Time_E), format = "h:m:s"), length.out = 10)))
-  axis(2, at = c(1:3), labels = c("low", "medium", "high"))
+  axis(2, at = seq(250, 0, by = -10), labels = seq(250, 0, by = -10))
   
   #subset predator data to include only the correct date and Adelie Penguins
   pred <- pred[pred$d == kaos_dates[i], ]
@@ -53,7 +56,7 @@ for(i in 1:length(kaos_dates)) {
   if (nrow(pred) != 0) {
     for (j in 1:nrow(pred)) {
       
-      points(pred$t[j], 4, pch = "x", cex = 3, col = "blue")
+      points(pred$t[j], 4, pch = "x", cex = 2, col = "blue")
       
     }
   }
