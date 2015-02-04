@@ -38,13 +38,13 @@ for(i in 1:length(kaos_dates)) {
   #plot krill swarm location at each density by depth and time  
   plot(c(krill["high"][[1]]$Time_S[1], krill["high"][[1]]$Time_E[1]), c(krill["high"][[1]]$Depth_mean[1], krill["high"][[1]]$Depth_mean[1]), type = "l", xlim = c(min(krill["low"][[1]]$Time_S), max(krill["low"][[1]]$Time_E)), lwd = 2, xaxt = "n", ylim = c(100, 0), yaxt = "n", xlab = "time", ylab = "swarm", col = "white")
   for (j in 1:nrow(low)) {
-    points(c(krill["low"][[1]]$Time_S[j], krill["low"][[1]]$Time_E[j]), c(krill["low"][[1]]$Depth_mean[j], krill["low"][[1]]$Depth_mean[j]), type = "l", lwd = 5)
+    points(c(krill["low"][[1]]$Time_S[j], krill["low"][[1]]$Time_E[j]), c(krill["low"][[1]]$Depth_mean[j], krill["low"][[1]]$Depth_mean[j]), type = "l", lwd = 7)
    }
   for (j in 1:nrow(low)) {
-    points(c(krill["med"][[1]]$Time_S[j], krill["med"][[1]]$Time_E[j]), c(krill["med"][[1]]$Depth_mean[j], krill["med"][[1]]$Depth_mean[j]), type = "l", lwd = 5, col = "darkorange")
+    points(c(krill["med"][[1]]$Time_S[j], krill["med"][[1]]$Time_E[j]), c(krill["med"][[1]]$Depth_mean[j], krill["med"][[1]]$Depth_mean[j]), type = "l", lwd = 7, col = "darkorange")
   }
   for (j in 1:nrow(low)) {
-     points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(krill["high"][[1]]$Depth_mean[j], krill["high"][[1]]$Depth_mean[j]), type = "l", lwd = 5, col = "red")    
+     points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(krill["high"][[1]]$Depth_mean[j], krill["high"][[1]]$Depth_mean[j]), type = "l", lwd = 7, col = "red")    
   }
   title(paste("Date", kaos_dates[i]))
   
