@@ -22,6 +22,10 @@ for(i in 1:length(kaos_dates)) {
     #exclude other dates
     krill[j][[1]] <- krill[j][[1]][krill[j][[1]]$Date_S == kaos_dates[i] & krill[j][[1]]$Date_E == kaos_dates[i], ]
     
+    #exclude depths > 100m
+    krill[j][[1]] <- krill[j][[1]][krill[j][[1]]$Depth_mean <= 100, ]
+    
+    
     #remove null values (-999)
     krill[j][[1]] <- krill[j][[1]][which(krill[j][[1]]$Sv_mean != -999), ]
     
@@ -32,21 +36,21 @@ for(i in 1:length(kaos_dates)) {
   }
   
   #plot krill swarm location at each density by depth and time  
-  plot(c(krill["high"][[1]]$Time_S[1], krill["high"][[1]]$Time_E[1]), c(krill["high"][[1]]$Depth_mean[1], krill["high"][[1]]$Depth_mean[1]), type = "l", xlim = c(min(krill["low"][[1]]$Time_S), max(krill["low"][[1]]$Time_E)), lwd = 2, xaxt = "n", ylim = c(250, 0), yaxt = "n", xlab = "time", ylab = "swarm", col = "white")
+  plot(c(krill["high"][[1]]$Time_S[1], krill["high"][[1]]$Time_E[1]), c(krill["high"][[1]]$Depth_mean[1], krill["high"][[1]]$Depth_mean[1]), type = "l", xlim = c(min(krill["low"][[1]]$Time_S), max(krill["low"][[1]]$Time_E)), lwd = 2, xaxt = "n", ylim = c(100, 0), yaxt = "n", xlab = "time", ylab = "swarm", col = "white")
   for (j in 1:nrow(low)) {
-    points(c(krill["low"][[1]]$Time_S[j], krill["low"][[1]]$Time_E[j]), c(krill["low"][[1]]$Depth_mean[j], krill["low"][[1]]$Depth_mean[j]), type = "l", lwd = 8)
+    points(c(krill["low"][[1]]$Time_S[j], krill["low"][[1]]$Time_E[j]), c(krill["low"][[1]]$Depth_mean[j], krill["low"][[1]]$Depth_mean[j]), type = "l", lwd = 5)
    }
   for (j in 1:nrow(low)) {
-    points(c(krill["med"][[1]]$Time_S[j], krill["med"][[1]]$Time_E[j]), c(krill["med"][[1]]$Depth_mean[j], krill["med"][[1]]$Depth_mean[j]), type = "l", lwd = 8, col = "darkorange")
+    points(c(krill["med"][[1]]$Time_S[j], krill["med"][[1]]$Time_E[j]), c(krill["med"][[1]]$Depth_mean[j], krill["med"][[1]]$Depth_mean[j]), type = "l", lwd = 5, col = "darkorange")
   }
   for (j in 1:nrow(low)) {
-     points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(krill["high"][[1]]$Depth_mean[j], krill["high"][[1]]$Depth_mean[j]), type = "l", lwd = 8, col = "red")    
+     points(c(krill["high"][[1]]$Time_S[j], krill["high"][[1]]$Time_E[j]), c(krill["high"][[1]]$Depth_mean[j], krill["high"][[1]]$Depth_mean[j]), type = "l", lwd = 5, col = "red")    
   }
   title(paste("Date", kaos_dates[i]))
   
   axis(1, at = seq(from = min(krill["low"][[1]]$Time_S), to = max(krill["low"][[1]]$Time_E), length.out = 10), 
        labels = chron(times. = seq(from = chron(times. = min(krill["low"][[1]]$Time_S), format = "h:m:S"), to = chron(times. = max(krill["low"][[1]]$Time_E), format = "h:m:s"), length.out = 10)))
-  axis(2, at = seq(250, 0, by = -10), labels = seq(250, 0, by = -10))
+  axis(2, at = seq(100, 0, by = -10), labels = seq(100, 0, by = -10))
   
   #subset predator data to include only the correct date and Adelie Penguins
   pred <- pred[pred$d == kaos_dates[i], ]
