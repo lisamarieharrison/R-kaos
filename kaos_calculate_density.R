@@ -3,10 +3,12 @@
 #Author: Lisa-Marie Harrison
 #Date: 01/10/2014
 
-setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/exported_integrations")
+setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations")
+
+file.create("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals.csv")
 
 #get dates of files in folder
-survey.dates <- as.numeric(substr(list.files(path = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/exported_integrations", pattern = paste("(", "38kHz", ").*\\.csv$", sep = ""), full.names = F), start = 24, stop = 31))
+survey.dates <- as.numeric(substr(list.files(path = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations", pattern = paste("(", "38kHz", ").*\\.csv$", sep = ""), full.names = F), start = 24, stop = 31))
 
 #for each date, read in the 38 and 120kHz files and process the data
 
@@ -28,6 +30,7 @@ for (i in 1:length(survey.dates)) {
   #calculate 120kHz - 38kHz for each 10x50 window
   sv_38 <- acoustic_38$Sv_mean
   sv_120 <- acoustic_120$Sv_mean
+  noise <- sv_120 > 500
   sv_38[sv_38 > 500 | sv_38 < -500] <- NA
   sv_120[sv_120 > 500 | sv_120 < -500] <- NA
   sv_diff <- sv_120 - sv_38
@@ -49,25 +52,36 @@ for (i in 1:length(survey.dates)) {
   mvbs  <- 10*log10(aggregate(matrix(sv, ncol = 1), by = list(rep(c(1:(length(sv)/max(acoustic_38$Layer))), each = max(acoustic_38$Layer))), sum, na.rm = T)$V1/max(acoustic_38$Layer))
   mvbs[mvbs == -Inf] <- NA
   
+  
   #convert to density using target strength (kg/m2 per interval)
   p <- 250*10 ^((mvbs - -42.22)/10)*1000
   
-  #plot density (kg/m2 per interval) along the transect
-  plot(ksmooth(c(1:length(p)), p, bandwidth = 15), type = "l")
+  #add zero krill intervals back in
+  p[is.na(p)] <- 0
   
-  dat <- cbind(time, date, lat, long, start_time, end_time, p)
+  #remove noise intervals
+  p[noise] <- NA
+  
+  #calculate interval length (m)
+  interval_length <- 0
+  for (k in unique(acoustic_38$Interval)) {
+    interval_length[k] <- (acoustic_38$Dist_E[acoustic_38$Layer == 1 & acoustic_38$Interval == k] - acoustic_38$Dist_S[acoustic_38$Layer == 1 & acoustic_38$Interval == k])*1000
+  }
+  
+  #calculate interval weighting
+  interval_weight <- interval_length/sum(interval_length)
+  
+  #calculate mean weighted density
+  transect_mean <- sum(na.omit(p*interval_weight))
+  
+
+  dat <- cbind(time, date, lat, long, start_time, end_time, p, interval_weight)
   
   #append to current file
-  write.table(dat, file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/kaos_combined_density_intervals.csv", row.names = F, col.names = F, sep = ",", append = TRUE)
+  write.table(dat, file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals.csv", row.names = F, col.names = F, sep = ",", append = TRUE)
   
   msg <- paste("Finished calculating krill density for date ", survey.dates[i], sep = "")
   message(msg)
   
 }
 
-
-
- 
-    
-    
-    
