@@ -30,9 +30,9 @@ for (i in 1:length(survey.dates)) {
   #calculate 120kHz - 38kHz for each 10x50 window
   sv_38 <- acoustic_38$Sv_mean
   sv_120 <- acoustic_120$Sv_mean
-  noise <- sv_120 > 500
   sv_38[sv_38 > 500 | sv_38 < -500] <- NA
   sv_120[sv_120 > 500 | sv_120 < -500] <- NA
+  noise <- is.na(sv_120)
   sv_diff <- sv_120 - sv_38
   
   time  <- as.character(acoustic_38$Time_M[seq(1, nrow(acoustic_38), by = max(acoustic_38$Layer))])
@@ -60,7 +60,7 @@ for (i in 1:length(survey.dates)) {
   p[is.na(p)] <- 0
   
   #remove noise intervals
-  p[noise] <- NA
+  p[table(acoustic_120$Interval, noise)[, 1] == 49] <- NA
   
   #calculate interval length (m)
   interval_length <- 0
@@ -84,4 +84,11 @@ for (i in 1:length(survey.dates)) {
   message(msg)
   
 }
+
+transect_density <- 0
+for(i in 1:length(unique(dat$date))) {
+  transect_density[i] <- sum(na.omit(dat$p[dat$date == unique(dat$date)[i]]*dat$interval_weight[dat$date == unique(dat$date)[i]]))
+}
+
+
 
