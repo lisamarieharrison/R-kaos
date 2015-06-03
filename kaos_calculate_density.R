@@ -85,6 +85,12 @@ for (i in 1:length(survey.dates)) {
   
 }
 
+#add names to columns
+dat <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals.csv", header = F)
+names(dat) <- c("time", "date", "lat", "long", "start_time", "end_time", "p", "interval_weight")
+write.csv(dat, "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals.csv", row.names = F)
+
+
 transect_density <- 0
 for(i in 1:length(unique(dat$date))) {
   transect_density[i] <- sum(na.omit(dat$p[dat$date == unique(dat$date)[i]]*dat$interval_weight[dat$date == unique(dat$date)[i]]))
