@@ -2,7 +2,7 @@
 #Author: Lisa-Marie Harrison
 #Date: 02/10/2014
 
-setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data")
+setwd(dir = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS")
 krill <- read.csv(file = "kaos_combined_density_intervals.csv", header = T)
 pred <- read.csv(file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/kaos_20030115_20030125_abp.csv", header = T)
 phyto <- read.csv(file = "kaos_underway_fluoro.csv", header = T)

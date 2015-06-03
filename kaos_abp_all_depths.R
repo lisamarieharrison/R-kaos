@@ -3,7 +3,7 @@
 #Author: Lisa-Marie Harrison
 #Date: 20/10/2014
 
-krill <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/kaos_combined_density_intervals_all_depths.csv", header = F)
+krill <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_all_depths.csv", header = F)
 pred <- read.csv(file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS data/kaos_20030115_20030125_abp.csv", header = T)
 library(chron)
 
@@ -22,7 +22,7 @@ pred <- pred[pred$Species == "Pygoscelis adeliae (Hombron and Jacquinot,1841) (A
 krill <- krill[krill$long < 900, ]
 
 #remove noise values
-krill$p[krill$p > 2000] <- NA
+krill$p[krill$p > 1000] <- NA
 
 #bin predator sightings into intervals corresponding with integration interval times
 sightings <- rep(0, length(krill$p))
