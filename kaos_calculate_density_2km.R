@@ -31,7 +31,7 @@ for (i in 1:length(survey.dates)) {
   sv_38 <- acoustic_38$Sv_mean
   sv_120 <- acoustic_120$Sv_mean
   sv_38[sv_38 > 500 | sv_38 < -500] <- NA
-  sv_120[sv_120 > 500 | sv_120 < -500] <- NA
+  sv_120[sv_120 > 500 | sv_120 < -100] <- NA
   noise <- is.na(sv_120)
   sv_diff <- sv_120 - sv_38
   
@@ -60,7 +60,7 @@ for (i in 1:length(survey.dates)) {
   p[is.na(p)] <- 0
   
   #remove noise intervals
-  p[table(acoustic_120$Interval, noise)[, 1] == 49] <- NA
+  p[table(acoustic_120$Interval, noise)[, 1] == length(unique(acoustic_38$Layer))] <- NA
   
   #calculate interval length (m)
   interval_length <- 0
@@ -77,7 +77,7 @@ for (i in 1:length(survey.dates)) {
   dat <- cbind(time, date, lat, long, start_time, end_time, p, interval_weight, interval_length)
   
   #append to current file
-  write.table(dat, file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_500m.csv", row.names = F, col.names = F, sep = ",", append = TRUE)
+  write.table(dat, file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", row.names = F, col.names = F, sep = ",", append = TRUE)
   
   msg <- paste("Finished calculating krill density for date ", survey.dates[i], sep = "")
   message(msg)
@@ -90,7 +90,6 @@ names(dat) <- c("time", "date", "lat", "long", "start_time", "end_time", "p", "i
 write.csv(dat, "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", row.names = F)
 
 dat <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", header = T)
-dat$interval_length[dat$interval_length > 500] <- 0
 dat$p[dat$p > 5000] <- NA
 
 transect_density <- 0
@@ -102,3 +101,5 @@ sum(na.omit(dat$p*dat$interval_length/sum(dat$interval_length)))
 
 #calculate biomass (kt)
 (sum(na.omit(dat$p*dat$interval_length/sum(dat$interval_length)))*10500e6)/1000/1000/1000
+
+
