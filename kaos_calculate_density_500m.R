@@ -90,7 +90,6 @@ names(dat) <- c("time", "date", "lat", "long", "start_time", "end_time", "p", "i
 write.csv(dat, "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_500m.csv", row.names = F)
 
 dat <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_500m.csv", header = T)
-dat$interval_length[dat$interval_length > 500] <- 0
 dat$p[dat$p > 5000] <- NA
 
 transect_density <- 0
