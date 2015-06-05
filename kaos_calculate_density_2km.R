@@ -74,7 +74,7 @@ for (i in 1:length(survey.dates)) {
   #calculate mean weighted density
   transect_mean <- sum(na.omit(p*interval_weight))
   
-  dat <- cbind(time, date, lat, long, start_time, end_time, p, interval_weight, interval_length)
+  dat <- cbind(time, date, lat, long, start_time, end_time, p, interval_weight, interval_length, i)
   
   #append to current file
   write.table(dat, file = "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", row.names = F, col.names = F, sep = ",", append = TRUE)
@@ -86,15 +86,15 @@ for (i in 1:length(survey.dates)) {
 
 #add names to columns
 dat <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", header = F)
-names(dat) <- c("time", "date", "lat", "long", "start_time", "end_time", "p", "interval_weight", "interval_length")
+names(dat) <- c("time", "date", "lat", "long", "start_time", "end_time", "p", "interval_weight", "interval_length", "i")
 write.csv(dat, "C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", row.names = F)
 
 dat <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_combined_density_intervals_2km.csv", header = T)
 dat$p[dat$p > 5000] <- NA
 
 transect_density <- 0
-for(i in 1:length(unique(dat$date))) {
-  transect_density[i] <- sum(na.omit(dat$p[dat$date == unique(dat$date)[i]]*dat$interval_weight[dat$date == unique(dat$date)[i]]))
+for(i in unique(dat$i)) {
+  transect_density[i] <- sum(na.omit(dat$p[dat$i == i]*dat$interval_weight[dat$i == i]))
 }
 
 sum(na.omit(dat$p*dat$interval_length/sum(dat$interval_length)))
