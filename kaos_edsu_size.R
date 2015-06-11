@@ -15,11 +15,13 @@ for (i in files) {
   
 }
 
+date <- "20030117" #specify date as a character
+
 #read all acoustic data files and combine into one
 acoustic_38 <- matrix(0, ncol = ncol(dat))
 acoustic_120 <- matrix(0, ncol = ncol(dat))
-files_38 <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T, pattern ="38kHz")
-files_120 <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T, pattern = "120kHz")
+files_38 <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T, pattern = paste("38kHz.*", date, sep = ""))
+files_120 <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T, pattern = paste("120kHz.*", date, sep = ""))
 
 for (i in 1:length(files_38)) {
   dat_38 <- read.csv(files_38[i], header = T)
@@ -65,10 +67,10 @@ sv_diff <- sv_120 - sv_38
 
 #remove 120 - 38 kHz values outside of [1.02, 14.75] because these are unlikely to be krill
 #dB difference window is from Potts AAD report for KAOS data
-sv_diff[sv_diff <= 2 | sv_diff >= 16] <- NA
+sv_diff[sv_diff <= 1.02 | sv_diff >= 14.75] <- NA
 sv_120[is.na(sv_diff)] <- NA
 
-sv <- 10^(sv_120/10)*10
+sv <- 10^(sv_120/10)
 
 mvbs <- 0
 for (i in 1:length(unique(acoustic_38$unique_interval))) {
@@ -77,7 +79,7 @@ for (i in 1:length(unique(acoustic_38$unique_interval))) {
 mvbs[mvbs == -Inf] <- NA
 
 
-abc <- 10 ^((mvbs)/10)
+abc <- 10 ^((mvbs)/10)*5
 
 deg2rad <- function(deg) {
   #converts degrees to radians
@@ -118,15 +120,17 @@ for (k in 1:nrow(int_matrix)) {
 }
 interval_length[is.nan(interval_length)] <- 0
 
+set_edsu_length <- 300 #choose the edsu length in m
+
 abc_nm <- 0
 j <- 1
 n_int <- 0
-int_time <- rep("00:00:00", round((sum(interval_length)/2000)))
-for (i in 1:(sum(interval_length)/2000)) {
+int_time <- rep("00:00:00", round((sum(interval_length)/set_edsu_length)))
+for (i in 1:(sum(interval_length)/set_edsu_length)) {
   abc_nm[i]  <- 0
   cumulative_length <- 0
   n_int[i] <- 0
-  while (cumulative_length < 2000) {
+  while (cumulative_length < set_edsu_length) {
     abc_nm[i] <- abc_nm[i] + abc[j]
     j <- j + 1
     cumulative_length <- cumulative_length + interval_length[j]
@@ -141,14 +145,12 @@ for (i in 1:(sum(interval_length)/2000)) {
 nasc <- (abc_nm/n_int)*4*pi*1852^2
 nasc <- nasc[-!chron(times. = int_time, format = "h:m:s") > chron(times. = "01:00:00", format = "h:m:s")]
 
-#method 1
-p <- nasc*0.155
-p[p > 5000] <- NA
-p[is.na(p)] <- 0
-mean(p)
 
 #method 2
 p <- nasc*0.6697
 p[p > 5000] <- NA
 p[is.na(p)] <- 0
 mean(p)
+
+
+
