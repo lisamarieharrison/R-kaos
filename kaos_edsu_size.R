@@ -4,22 +4,22 @@
 library(chron)
 
 #remove null rows from acoustic files
-files <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T)
-for (i in files) {
-  
-  dat <- read.csv(i, header = T)
-  w <- !dat$Sv_mean == 9999
-  dat <- dat[w, ]
-  
-  write.csv(dat, i, row.names = F)
-  
-}
+# files <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T)
+# for (i in files) {
+#   
+#   dat <- read.csv(i, header = T)
+#   w <- !dat$Sv_mean == 9999
+#   dat <- dat[w, ]
+#   
+#   write.csv(dat, i, row.names = F)
+#   
+# }
 
-date <- "20030117" #specify date as a character
+date <- "20030118" #specify date as a character
 
 #read all acoustic data files and combine into one
-acoustic_38 <- matrix(0, ncol = ncol(dat))
-acoustic_120 <- matrix(0, ncol = ncol(dat))
+acoustic_38 <- matrix(0, ncol = 82)
+acoustic_120 <- matrix(0, ncol = 82)
 files_38 <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T, pattern = paste("38kHz.*", date, sep = ""))
 files_120 <- list.files("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/exported_integrations/", full.names = T, pattern = paste("120kHz.*", date, sep = ""))
 
@@ -49,12 +49,12 @@ for (i in 1:length(files_38)) {
 acoustic_38 <- acoustic_38[-1, ]
 acoustic_120 <- acoustic_120[-1, ]
 
-int = 1
-for (i in 1:nrow(acoustic_38)) {
-  acoustic_38$unique_interval[i] <- int
-  if (acoustic_38$Layer[i] == 49) {
-    int = int + 1
-  } 
+
+max_layer <- max(acoustic_38$Layer)
+change_loc <- which(acoustic_38$Layer == max_layer)
+acoustic_38$unique_interval <- rep(1, nrow(acoustic_38))
+for (i in 1:(length(change_loc) - 1)) {
+  acoustic_38$unique_interval[(change_loc[i] + 1):change_loc[i+1]] <- i + 1
 }
 
 #calculate 120kHz - 38kHz for each 10x50 window
@@ -72,14 +72,12 @@ sv_120[is.na(sv_diff)] <- NA
 
 sv <- 10^(sv_120/10)
 
-mvbs <- 0
-for (i in 1:length(unique(acoustic_38$unique_interval))) {
-  mvbs[i] = 10*log10(sum(na.omit(sv[acoustic_38$unique_interval == unique(acoustic_38$unique_interval)[i]])))
-}
+sv_mat <- as.data.frame(cbind(sv, acoustic_38$unique_interval))
+colnames(sv_mat) <- c("sv", "unique_interval")
+mvbs <- 10*log10(ddply(sv_mat, "unique_interval", numcolwise(sum), na.rm = TRUE)$sv/length(unique(acoustic_38$Layer)))
 mvbs[mvbs == -Inf] <- NA
 
-
-abc <- 10 ^((mvbs)/10)*5
+abc <- 10 ^((mvbs)/10)*250
 
 deg2rad <- function(deg) {
   #converts degrees to radians
@@ -120,7 +118,7 @@ for (k in 1:nrow(int_matrix)) {
 }
 interval_length[is.nan(interval_length)] <- 0
 
-set_edsu_length <- 300 #choose the edsu length in m
+set_edsu_length <- 200 #choose the edsu length in m
 
 abc_nm <- 0
 j <- 1
