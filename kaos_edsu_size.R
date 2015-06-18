@@ -146,7 +146,7 @@ nasc <- nasc[-!chron(times. = int_time, format = "h:m:s") > chron(times. = "01:0
 
 #method 2
 p <- nasc*0.6697
-p[p > 5000] <- NA
+p[p > 600] <- NA
 p[is.na(p)] <- 0
 mean(p)
 
