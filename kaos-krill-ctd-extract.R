@@ -68,7 +68,7 @@ for (i in 1:length(unique(ctd$stn))) {
   mvbs[mvbs == -Inf] <- NA
   
   #convert to density using target strength (kg/m2 per interval)
-  p <- 250*10 ^((mvbs - -42.22)/10)*1000
+  p <- 5*10 ^((mvbs - -42.22)/10)*1000
  
   out <- cbind(rep(stn, length(p)), p)
 
