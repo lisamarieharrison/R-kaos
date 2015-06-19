@@ -14,6 +14,10 @@ for (i in 1:length(unique(ctd$stn))) {
   stn <- unique(ctd$stn)[i]
   date <- unique(ctd$date[ctd$stn == stn])
   
+  if (stn == 11) {
+    next()
+  }
+  
   krill_file <- list.files("exported_integrations_500m/", pattern = as.character(date), full.names = T)
   if (length(krill_file) != 0) {
     krill_120 <- read.csv(krill_file[1], header = T)
@@ -70,14 +74,14 @@ for (i in 1:length(unique(ctd$stn))) {
   #convert to density using target strength (kg/m2 per interval)
   p <- 5*10 ^((mvbs - -42.22)/10)*1000
  
-  out <- cbind(rep(stn, length(p)), p)
+  out <- cbind(rep(stn, length(p)), p, sort(unique(krill_38$Depth_mean))[1:49])
 
   write.table(out, "kaos_krill_ctd.csv", sep = ",", row.names = F, col.names = F, append = T)  
   
 }
 
 dat <- read.csv("kaos_krill_ctd.csv", header = F)
-names(dat) <- c("stn", "p")
+names(dat) <- c("stn", "p", "depth")
 write.csv(dat, "kaos_krill_ctd.csv", row.names = F)
 
 
