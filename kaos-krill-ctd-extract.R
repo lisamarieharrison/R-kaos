@@ -48,7 +48,7 @@ for (i in 1:length(unique(ctd$stn))) {
   #remove layers of -1 
   krill_38 <- krill_38[krill_38$Layer > 0, ]
   krill_120 <- krill_120[krill_120$Layer > 0, ]  
-  
+    
   #calculate 120kHz - 38kHz for each 10x50 window
   sv_38 <- krill_38$Sv_mean
   sv_120 <- krill_120$Sv_mean
@@ -62,7 +62,13 @@ for (i in 1:length(unique(ctd$stn))) {
   sv_120[is.na(sv_diff)] <- NA
     
   #convert to density using target strength (kg/m2 per interval)
-  p <- 5*10 ^((sv_120 - -42.22)/10)*1000
+  sv <- 10^(sv_120/10)
+  
+  mvbs <- 10*log10(aggregate(matrix(sv, ncol = 1), by = list(rep(c(1:(length(sv)/(length(sv)/max(krill_38$Layer)))), length(sv)/max(krill_38$Layer))), sum, na.rm = T)$V1/(length(sv)/max(krill_38$Layer)))
+  mvbs[mvbs == -Inf] <- NA
+  
+  #convert to density using target strength (kg/m2 per interval)
+  p <- 250*10 ^((mvbs - -42.22)/10)*1000
  
   out <- cbind(rep(stn, length(p)), p)
 
