@@ -44,14 +44,66 @@ fluoro.lm <- lm(log(p) ~ log(ctd$fluoro + 1))
 summary(fluoro.lm)
 
 
-plot(log(ctd$fluoro + 1), log(p), xlab = "log(fluoro)", ylab = "log(krill density)")
+plot(log(ctd$fluoro + 1), log(p), xlab = "log(fluoro)", ylab = "log(krill density)", pch = 19)
 y <- fluoro.lm$coefficients[1] + fluoro.lm$coefficients[2]*log(ctd$fluoro + 1)
 x <- log(ctd$fluoro + 1)
 xy <- cbind(x, y)
 xy <- xy[order(xy[, 1]), ]
 points(xy[, 1], xy[, 2], col = "red", type = "l")
+title("log(krill) vs log(phyto) for 13 KAOS CTD stations")
 
 
+#plot coloured by station
+plot(log(ctd$fluoro + 1), log(p), xlab = "log(fluoro)", ylab = "log(krill density)", pch = 19, col = as.factor(ctd$stn), cex = 2)
+title("log(krill) vs log(phyto) coloured by station (n = 13)")
+
+
+#model with station random intercept
+ctd$stn <- as.factor(ctd$stn)
+fluoro.lm <- lme(log(p) ~ log(fluoro + 1), random = ~1 | stn, data = ctd, na.action = na.omit)
+summary(fluoro.lm)
+
+
+plot(log(ctd$fluoro + 1), log(p), ylim = c(-7, 1), xlab = "log(fluoro)", ylab = "log(krill density)", pch = 19, col = ctd$stn)
+y <- fluoro.lm$coefficients$fixed[1] + fluoro.lm$coefficients$fixed[2]*log(ctd$fluoro + 1)
+x <- log(ctd$fluoro + 1)
+xy <- cbind(x, y)
+xy <- xy[order(xy[, 1]), ]
+points(xy[, 1], xy[, 2], col = "black", type = "l", lwd = 4)
+title("log(krill) vs log(phyto) for 13 KAOS CTD stations")
+
+
+for(i in 1:nlevels(ctd$stn)) {
+  y <- fluoro.lm$coefficients$fixed[1] + fluoro.lm$coefficients$random$stn[i] + fluoro.lm$coefficients$fixed[2]*log(ctd$fluoro + 1)[ctd$stn == levels(ctd$stn)[i]]
+  x <- log(ctd$fluoro + 1)[ctd$stn == levels(ctd$stn)[i]]
+  xy <- cbind(x, y)
+  xy <- xy[order(xy[, 1]), ]
+  points(xy[, 1], xy[, 2], type = "l", col = i)
+}
+
+
+
+#model with station random intercept and slope
+fluoro.lm <- lme(log(p) ~ log(fluoro + 1), random = ~1 + log(fluoro + 1) | stn, data = ctd, na.action = na.omit)
+summary(fluoro.lm)
+
+
+plot(log(ctd$fluoro + 1), log(p), ylim = c(-7, 1), xlab = "log(fluoro)", ylab = "log(krill density)", pch = 19, col = ctd$stn)
+y <- fluoro.lm$coefficients$fixed[1] + fluoro.lm$coefficients$fixed[2]*log(ctd$fluoro + 1)
+x <- log(ctd$fluoro + 1)
+xy <- cbind(x, y)
+xy <- xy[order(xy[, 1]), ]
+points(xy[, 1], xy[, 2], col = "black", type = "l", lwd = 4)
+title("log(krill) vs log(phyto) with random intercept and slope")
+
+
+for(i in 1:nlevels(ctd$stn)) {
+  y <- fluoro.lm$coefficients$fixed[1] + fluoro.lm$coefficients$random$stn[i, 1] + (fluoro.lm$coefficients$fixed[2] + fluoro.lm$coefficients$random$stn[i, 2])*log(ctd$fluoro + 1)[ctd$stn == levels(ctd$stn)[i]]
+  x <- log(ctd$fluoro + 1)[ctd$stn == levels(ctd$stn)[i]]
+  xy <- cbind(x, y)
+  xy <- xy[order(xy[, 1]), ]
+  points(xy[, 1], xy[, 2], type = "l", col = i)
+}
 
 
 
