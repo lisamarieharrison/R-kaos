@@ -7,6 +7,7 @@ ctd <- read.csv("kaos_ctd.csv", header = T)
 krill <- read.csv("kaos_krill_ctd.csv", header = T)
 library(lattice)
 library(latticeExtra)
+library(nlme)
 
 #remove stations where there was no acoustic data
 ctd <- ctd[ctd$stn %in% unique(krill$stn), ]
