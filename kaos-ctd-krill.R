@@ -41,6 +41,7 @@ lat.plot + lat.plot2
 
 
 #linear model for log-log krill fluoro relationship
+ctd$stn <- as.factor(ctd$stn)
 fluoro.lm <- lm(log(p) ~ log(ctd$fluoro + 1))
 summary(fluoro.lm)
 
@@ -60,7 +61,6 @@ title("log(krill) vs log(phyto) coloured by station (n = 13)")
 
 
 #model with station random intercept
-ctd$stn <- as.factor(ctd$stn)
 fluoro.lm <- lme(log(p) ~ log(fluoro + 1), random = ~1 | stn, data = ctd, na.action = na.omit)
 summary(fluoro.lm)
 
@@ -106,6 +106,8 @@ for(i in 1:nlevels(ctd$stn)) {
   points(xy[, 1], xy[, 2], type = "l", col = i)
 }
 
+#add coloured numbers for each station (set original point colour to white)
+text(log(ctd$fluoro + 1), log(p), ctd$stn, col = as.numeric(ctd$stn))
 
 
 
