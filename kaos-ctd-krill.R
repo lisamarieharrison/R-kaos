@@ -110,4 +110,9 @@ for(i in 1:nlevels(ctd$stn)) {
 text(log(ctd$fluoro + 1), log(p), ctd$stn, col = as.numeric(ctd$stn))
 
 
+#calculate marginal and conditional R-squared for mixed model
+source("C:/Users/Lisa/Documents/phd/southern ocean/Mixed models/R code/R-mixed-models/calc_conditional_marginal_Rsquared.R")
+r.squared.lme(fluoro.lm)
+
+
 
