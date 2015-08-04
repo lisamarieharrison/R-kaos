@@ -115,4 +115,26 @@ source("C:/Users/Lisa/Documents/phd/southern ocean/Mixed models/R code/R-mixed-m
 r.squared.lme(fluoro.lm)
 
 
+#------------------------------- PRESENCE/ABSENCE -----------------------------#
+
+p <- rep(NA, nrow(ctd))
+for (i in unique(ctd$stn)) {
+  p[ctd$stn == i & ctd$depth %in% (2*round(krill$depth/2)[krill$stn == i])] <- krill$p[krill$stn == i]
+}
+
+pa <- p
+pa[p > 0] <- 1
+plot(ctd$fluoro, pa)
+
+boxplot(ctd$fluoro ~ pa, xlab = "Krill (0 = absent, 1 = present)", ylab = "phytoplankton fluoro")
+
+#binomial glm for presence/absence
+pa.lm <- glm(pa ~ fluoro - 1, dat = ctd, family = binomial)
+summary(pa.lm)
+
+MyData <- data.frame(fluoro = seq(from = -0.6, to =  13, by = 0.1))
+Pred <- predict(pa.lm, newdata = MyData, type = "response")
+plot(ctd$fluoro, pa, xlab = "fluoro", ylab = "Probability of krill presence", ylim = c(0, 1))
+lines(MyData$fluoro, Pred)
+
 
