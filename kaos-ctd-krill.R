@@ -137,4 +137,14 @@ Pred <- predict(pa.lm, newdata = MyData, type = "response")
 plot(ctd$fluoro, pa, xlab = "fluoro", ylab = "Probability of krill presence", ylim = c(0, 1))
 lines(MyData$fluoro, Pred)
 
+ctd$oxy[ctd$oxy < 0] <- NA
+ctd$sal[ctd$sal < 0] <- NA
+library(rgl)
+dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p))
+colnames(dat) <- c("oxy", "temp", "sal", "pa", "p")
+dat <- dat[!is.na(dat$pa), ]
+plot3d(x = dat$oxy, y = dat$temp, z = dat$sal, col = (dat$pa + 1), pch = 19, type = "s", 
+       size = 0.5, xlab = "Oxygen", ylab = "Temperature", zlab = "Salinity", box = FALSE)
+
+
 
