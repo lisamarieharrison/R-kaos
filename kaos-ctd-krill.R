@@ -140,11 +140,32 @@ lines(MyData$fluoro, Pred)
 ctd$oxy[ctd$oxy < 0] <- NA
 ctd$sal[ctd$sal < 0] <- NA
 library(rgl)
-dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p))
-colnames(dat) <- c("oxy", "temp", "sal", "pa", "p")
+dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p, ctd$depth))
+colnames(dat) <- c("oxy", "temp", "sal", "pa", "p", "depth")
 dat <- dat[!is.na(dat$pa), ]
-plot3d(x = dat$oxy, y = dat$temp, z = dat$sal, col = (dat$pa + 1), pch = 19, type = "s", 
-       size = 0.5, xlab = "Oxygen", ylab = "Temperature", zlab = "Salinity", box = FALSE)
+
+
+plot3d(x = dat$depth, y = dat$temp, z = dat$oxy, col = (dat$pa + 1), pch = 19, type = "s", 
+       size = 0.5, xlab = "Oxygen", ylab = "Temp", zlab = "Salinity", box = FALSE)
+
+#add 95% confidence ellipsoids for presence and absence
+pa_0 <- dat[dat$pa == 0, ] #only absent
+ellips <- ellipse3d(cov(cbind(pa_0$depth, pa_0$temp, pa_0$oxy)), 
+                    centre = c(mean(pa_0$depth), mean(pa_0$temp), 
+                               mean(pa_0$oxy)), level = 0.95)
+plot3d(ellips, col = "black", alpha = 0.2, add = TRUE)
+
+pa_1 <- na.omit(dat[dat$pa == 1, ]) #only present
+ellips <- ellipse3d(cov(cbind(pa_1$depth, pa_1$temp, pa_1$oxy)), 
+                    centre = c(mean(pa_1$depth), mean(pa_1$temp), 
+                               mean(pa_1$oxy)), level = 0.95)
+plot3d(ellips, col = "red", alpha = 0.2, add = TRUE)
+
+#add legend
+legend3d("topright", c("present", "absent"), col = c("red", "black"), bty = "n", pch = 19)
+
+
+
 
 
 
