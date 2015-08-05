@@ -8,6 +8,7 @@ krill <- read.csv("kaos_krill_ctd.csv", header = T)
 library(lattice)
 library(latticeExtra)
 library(nlme)
+library(rgl)
 
 #remove stations where there was no acoustic data
 ctd <- ctd[ctd$stn %in% unique(krill$stn), ]
@@ -16,6 +17,9 @@ ctd <- ctd[ctd$depth <= 250, ]
 
 #remove error values
 ctd$fluoro[ctd$fluoro == -9] <- NA
+ctd$temp[ctd$temp == -9] <- NA
+ctd$oxy[ctd$oxy < 0] <- NA
+ctd$sal[ctd$sal < 0] <- NA
 
 #remove station 11 because no krill data
 ctd <- ctd[ctd$stn != 11, ]
@@ -137,14 +141,11 @@ Pred <- predict(pa.lm, newdata = MyData, type = "response")
 plot(ctd$fluoro, pa, xlab = "fluoro", ylab = "Probability of krill presence", ylim = c(0, 1))
 lines(MyData$fluoro, Pred)
 
-ctd$oxy[ctd$oxy < 0] <- NA
-ctd$sal[ctd$sal < 0] <- NA
-library(rgl)
+
+#3d plot of temperature, salinity and oxygen with krill presence/absence as colour
 dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p, ctd$depth))
 colnames(dat) <- c("oxy", "temp", "sal", "pa", "p", "depth")
 dat <- dat[!is.na(dat$pa), ]
-
-#3d plot of temperature, salinity and oxygen with krill presence/absence as colour
 
 plot3d(x = dat$depth, y = dat$temp, z = dat$oxy, col = (dat$pa + 1), pch = 19, type = "s", 
        size = 0.5, xlab = "Oxygen", ylab = "Temp", zlab = "Salinity", box = FALSE)
@@ -164,6 +165,20 @@ plot3d(ellips, col = "red", alpha = 0.2, add = TRUE)
 
 #add legend
 legend3d("topright", c("present", "absent"), col = c("red", "black"), bty = "n", pch = 19)
+
+
+pa.lm <- glm(pa ~ temp + sal, dat = ctd, family = binomial)
+summary(pa.lm)
+
+MyData <- data.frame(cbind(seq(from = -2, to =  1, length.out = 100), seq(from = 33.2, to = 34.7, length.out = 100)))
+colnames(MyData) = c("temp", "sal")
+Pred <- predict(pa.lm, newdata = MyData, type = "response")
+
+
+
+plot(ctd$fluoro, pa, xlab = "fluoro", ylab = "Probability of krill presence", ylim = c(0, 1))
+lines(MyData$fluoro, Pred)
+
 
 
 
