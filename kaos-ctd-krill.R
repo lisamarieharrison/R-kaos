@@ -144,6 +144,7 @@ dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p, ctd$depth))
 colnames(dat) <- c("oxy", "temp", "sal", "pa", "p", "depth")
 dat <- dat[!is.na(dat$pa), ]
 
+#3d plot of temperature, salinity and oxygen with krill presence/absence as colour
 
 plot3d(x = dat$depth, y = dat$temp, z = dat$oxy, col = (dat$pa + 1), pch = 19, type = "s", 
        size = 0.5, xlab = "Oxygen", ylab = "Temp", zlab = "Salinity", box = FALSE)
