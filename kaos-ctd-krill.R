@@ -143,24 +143,24 @@ lines(MyData$fluoro, Pred)
 
 
 #3d plot of temperature, salinity and oxygen with krill presence/absence as colour
-dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p, ctd$depth))
-colnames(dat) <- c("oxy", "temp", "sal", "pa", "p", "depth")
+dat <- data.frame(cbind(ctd$oxy, ctd$temp, ctd$sal, pa, p, ctd$depth, ctd$stn))
+colnames(dat) <- c("oxy", "temp", "sal", "pa", "p", "depth", "stn")
 dat <- dat[!is.na(dat$pa), ]
 
-plot3d(x = dat$depth, y = dat$temp, z = dat$oxy, col = (dat$pa + 1), pch = 19, type = "s", 
-       size = 0.5, xlab = "Oxygen", ylab = "Temp", zlab = "Salinity", box = FALSE)
+plot3d(x = dat$depth, y = dat$temp, z = dat$sal, col = (dat$pa + 1), pch = 19, type = "s", 
+       size = 0.5, xlab = "Depth", ylab = "Temp", zlab = "Sal", box = FALSE)
 
 #add 95% confidence ellipsoids for presence and absence
 pa_0 <- dat[dat$pa == 0, ] #only absent
-ellips <- ellipse3d(cov(cbind(pa_0$depth, pa_0$temp, pa_0$oxy)), 
+ellips <- ellipse3d(cov(cbind(pa_0$depth, pa_0$temp, pa_0$sal)), 
                     centre = c(mean(pa_0$depth), mean(pa_0$temp), 
-                               mean(pa_0$oxy)), level = 0.95)
+                               mean(pa_0$sal)), level = 0.95)
 plot3d(ellips, col = "black", alpha = 0.2, add = TRUE)
 
 pa_1 <- na.omit(dat[dat$pa == 1, ]) #only present
-ellips <- ellipse3d(cov(cbind(pa_1$depth, pa_1$temp, pa_1$oxy)), 
+ellips <- ellipse3d(cov(cbind(pa_1$depth, pa_1$temp, pa_1$sal)), 
                     centre = c(mean(pa_1$depth), mean(pa_1$temp), 
-                               mean(pa_1$oxy)), level = 0.95)
+                               mean(pa_1$sal)), level = 0.95)
 plot3d(ellips, col = "red", alpha = 0.2, add = TRUE)
 
 #add legend
@@ -170,14 +170,115 @@ legend3d("topright", c("present", "absent"), col = c("red", "black"), bty = "n",
 pa.lm <- glm(pa ~ temp + sal, dat = ctd, family = binomial)
 summary(pa.lm)
 
-MyData <- data.frame(cbind(seq(from = -2, to =  1, length.out = 100), seq(from = 33.2, to = 34.7, length.out = 100)))
-colnames(MyData) = c("temp", "sal")
+new_temp <- sort(rep(seq(from = 2, to =  250, length.out = 100), 100))
+new_sal <- rep(seq(from = -2, to = 0.8, length.out = 100), 100)
+MyData <- data.frame(cbind(new_temp, new_sal))
+colnames(MyData) = c("depth", "temp")
 Pred <- predict(pa.lm, newdata = MyData, type = "response")
 
 
+plot(x = dat$depth, y = dat$temp, col = (dat$pa + 1))
+lines(MyData$depth[round(Pred, 2) == 0.5], MyData$temp[round(Pred, 2) == 0.5])
 
-plot(ctd$fluoro, pa, xlab = "fluoro", ylab = "Probability of krill presence", ylim = c(0, 1))
-lines(MyData$fluoro, Pred)
+l <- lm(MyData$temp[round(Pred, 2) == 0.5] ~ MyData$depth[round(Pred, 2) == 0.5])
+
+lines(l$coefficients[1] + unique(MyData$depth)*l$coefficients[2])
+
+
+
+plot3d(z = dat$depth, x = dat$temp, y = dat$sal, pch = 19, type = "s", col = (dat$pa + 1),
+       size = 0.5, zlab = "Depth", xlab = "Temp", ylab = "Present/Absent", box = FALSE)
+
+
+rgl.surface(x = unique(MyData$temp), y = Pred, z = unique(MyData$depth), front = "lines", 
+            back = "lines")
+
+
+d <- dat[dat$pa == 1, ]
+d <- d[, c(1:3, 5:7)]
+d$p <- log(d$p)
+
+plot3d(z = ctd$depth, x = ctd$fluoro, y = ctd$pa, pch = 19, type = "s", col = ctd$stn,
+       size = 0.5, zlab = "Depth", xlab = "Sal", ylab = "Present/Absent", box = FALSE)
+
+p.lm <- gam(d$p ~ s(d$temp) + s(d$oxy) + s(depth), data = d)
+summary(p.lm)
+plot(p.lm)
+
+
+plot(d[, 1:5])
+
+
+#------------------------ KRILL DENSITY AND OXYGEN ----------------------------#
+
+p.lm <- lm(d$p ~ d$oxy)
+summary(p.lm)
+
+plot(d$oxy, d$p)
+
+y <- p.lm$coefficients[1] + p.lm$coefficients[2]*d$oxy
+x <- d$oxy
+xy <- cbind(x, y)
+xy <- xy[order(xy[, 1]), ]
+points(xy[, 1], xy[, 2], col = "red", type = "l")
+title("log(krill) vs oxygen for 13 KAOS CTD stations")
+
+
+#plot coloured by station
+plot(d$oxy, d$p, xlab = "log(fluoro)", ylab = "log(krill density)", pch = 19, col = as.factor(d$stn), cex = 2)
+title("log(krill) vs oxygen coloured by station (n = 13)")
+
+
+#model with station random intercept
+p.lm <- lme(p ~ oxy, random = ~1 | stn, data = d, na.action = na.omit)
+summary(p.lm)
+
+
+plot(d$oxy, d$p, xlab = "oxygen", ylab = "log(krill density)", pch = 19, col = as.factor(d$stn))
+y <- p.lm$coefficients$fixed[1] + p.lm$coefficients$fixed[2]*d$oxy
+x <- d$oxy
+xy <- cbind(x, y)
+xy <- xy[order(xy[, 1]), ]
+points(xy[, 1], xy[, 2], col = "black", type = "l", lwd = 4)
+title("log(krill) vs oxygen for 13 KAOS CTD stations")
+
+
+for(i in 1:nlevels(ctd$stn)) {
+  y <- p.lm$coefficients$fixed[1] + p.lm$coefficients$random$stn[i] + p.lm$coefficients$fixed[2]*d$oxy[d$stn == unique(d$stn)[i]]
+  x <- d$oxy[d$stn == unique(d$stn)[i]]
+  xy <- cbind(x, y)
+  xy <- xy[order(xy[, 1]), ]
+  points(xy[, 1], xy[, 2], type = "l", col = i)
+}
+
+
+
+#model with station random intercept and slope
+p.lm <- lme(p ~ oxy, random = ~1 + oxy | stn, data = d, na.action = na.omit)
+summary(p.lm)
+
+
+plot(d$oxy, d$p, xlab = "oxygen", ylab = "log(krill density)", pch = 19, col = "white")
+y <- p.lm$coefficients$fixed[1] + p.lm$coefficients$fixed[2]*d$oxy
+x <- d$oxy
+xy <- cbind(x, y)
+xy <- xy[order(xy[, 1]), ]
+points(xy[, 1], xy[, 2], col = "black", type = "l", lwd = 4)
+title("log(krill) vs oxygen for 13 KAOS CTD stations")
+
+
+for(i in 1:nlevels(ctd$stn)) {
+  y <- p.lm$coefficients$fixed[1] + p.lm$coefficients$random$stn[i, 1] + (p.lm$coefficients$fixed[2] + p.lm$coefficients$random$stn[i, 2])*d$oxy[d$stn == unique(d$stn)[i]]
+  x <- d$oxy[d$stn == unique(d$stn)[i]]
+  xy <- cbind(x, y)
+  xy <- xy[order(xy[, 1]), ]
+  points(xy[, 1], xy[, 2], type = "l", col = i)
+}
+
+
+text(d$oxy, d$p, d$stn, col = as.numeric(d$stn))
+
+
 
 
 
