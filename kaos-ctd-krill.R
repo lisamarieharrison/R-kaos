@@ -272,9 +272,20 @@ summary(p.lm)
 #two-part model for krill presence/absence and density
 
 pa.lm <- glm(pa ~ oxy + sal + depth, data = dat, family = binomial)
+summary(pa.lm)
+
 p.lm <- lme(p ~ oxy, data = d, random =~ 1 | stn, na.action = na.omit)
 summary(p.lm)
+r.squared.lme(p.lm)
 
+
+par(mfrow = c(1, 3))
+boxplot(dat$oxy ~ as.factor(dat$pa), ylab = "Oxygen (umol/L)", main = "Oxygen")
+boxplot(dat$sal ~ as.factor(dat$pa), ylab = "Salinity (PSS78)", main = "Salinity")
+boxplot(dat$depth ~ as.factor(dat$pa), ylab = "Depth (m)", main = "Depth")
+
+
+table(na.omit(dat)$pa, round(fitted(pa.lm)))
 
 
 
