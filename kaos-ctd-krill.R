@@ -292,6 +292,12 @@ table(na.omit(dat)$pa, round(fitted(pa.lm)))
 library(cars)
 vif(pa.lm)
 
+#calculate sensitivity and specificity of binomial glm
+#sensitivity = predicted 1/true 1
+#speicificity = predicted 0/true 0
+sensitivity(as.factor(round(fitted(pa.lm))), as.factor(na.omit(dat)$pa))
+specificity(as.factor(round(fitted(pa.lm))), as.factor(na.omit(dat)$pa))
+
 #plot a ROC curve for the binomial glm
 roc.curve <- function(s, print = FALSE) {
   Ps <- (S > s)*1
@@ -318,6 +324,16 @@ title("ROC curve")
 #calculate the area under the ROC curve (0.5 = bad, 1 = perfect)
 library(flux)
 auc(M.ROC[1,], M.ROC[2,])
+
+library(caret)
+RMSE(fitted(p.lm), na.omit(d)$p)
+
+library(effects)
+par(mfrow = c(1, 3))
+plot(effect("oxy", mod = pa.lm))
+plot(effect("sal", mod = pa.lm))
+plot(effect("depth", mod = pa.lm))
+
 
 #-------------------------- PLOTS ON NATURAL SCALE ----------------------------#
 
