@@ -6,11 +6,8 @@ library(EchoviewR)
 #create an Echoview object and open Echoview
 EVAppObj <- COMCreate('EchoviewCom.EvApplication')
 
-#get list of EV files
-file.dates <- list.files(path = "~//EV", full.names = T, pattern = paste(".*\\.ev$", sep = ""))
-
 #read in the .csv file containing the start and end times for each CTD drop
-ctd.dat <- read.csv("kaos_ctd.csv", header = T)
+ctd.dat <- read.csv("C:/Users/Lisa/Documents/phd/southern ocean/KAOS/kaos_ctd.csv", header = T)
 ctd.info <- ctd.dat[ctd.dat$depth == 2, ] #subset to get 1 line for each station
 
 #add zeros at the start of single digit dates and times and make into a single string
@@ -35,6 +32,89 @@ EVctdTimes <- function(ctd.info){
 
 ctd.date <- ctd.info$date
 ctd.info <- EVctdTimes(ctd.info)$ctd.info.R
+
+#function to change start time to 1 hr before CTD drop and end time to 1 hr after
+ChangeStartTime <- function(ctd.info, ctd.date, h, m){
+  
+  library(stringr)
+  
+  #convert dates and times to POSIX* class
+  char.dt <- paste(ctd.date, substr(ctd.info$start_time, start = 1, stop = 6), sep = " ")
+  pos.dt <- strptime(char.dt, format = "%Y%m%d %H%M%S")
+  
+  hrs <- function(u) {
+    x <- u * 3600
+    return(x)
+  }
+  
+  mns <- function(m) {
+    x <- m * 60
+    return(x)
+  }
+  
+  #subtract time from dates
+  new.dt <- pos.dt - hrs(h) - mns(m)
+  
+  #convert back to EV compatible format
+  date.str <- substr(new.dt, start = 1, stop = 10)
+  date.str <- str_replace_all(date.str, "[^[:alnum:]]", "") #remove dashes from dates
+  
+  time.str <- substr(new.dt, start = 12, stop = 19)
+  time.str <- str_replace_all(time.str, "[^[:alnum:]]", "") #remove dashes from dates
+  #pad time with zeros to comform with Ev notation
+  time.str <- paste(time.str, 0, 0, 0, 0, sep ="")
+  
+  return(list(ctd.date = date.str, ctd.time = time.str))
+}
+
+#function to change end time to 1 hr after CTD drop
+ChangeEndTime <- function(ctd.info, ctd.date.new, h, m, ctd.start.time.new){
+  
+  library(stringr)
+  
+  #convert dates and times to POSIX* class
+  char.dt <- paste(ctd.date.new, substr(ctd.info$bottom_time, start = 1, stop = 6), sep = " ")
+  pos.dt <- strptime(char.dt, format = "%Y%m%d %H%M%S")
+  
+  hrs <- function(u) {
+    x <- u * 3600
+    return(x)
+  }
+  
+  mns <- function(m) {
+    x <- m * 60
+    return(x)
+  }
+  
+  days <- function(d) {
+    x <- d * 86400
+    return(x)
+  }
+  
+  #subtract time from dates
+  new.dt <- pos.dt + hrs(h) + mns(m)
+  
+  #convert back to EV compatible format
+  date.str <- substr(new.dt, start = 1, stop = 10)
+  date.str <- str_replace_all(date.str, "[^[:alnum:]]", "") #remove dashes from dates
+  
+  time.str <- substr(new.dt, start = 12, stop = 19)
+  time.str <- str_replace_all(time.str, "[^[:alnum:]]", "") #remove dashes from dates
+  #pad time with zeros to comform with Ev notation
+  time.str <- paste(time.str, 0, 0, 0, 0, sep ="")
+  
+  #add an extra end day if the CTD runs overnight
+  neg.val <- as.numeric(time.str) - as.numeric(ctd.start.time.new)
+  day.chng <- which(neg.val <= 0) #find stns where end time - start time is negative
+  posix.date <- strptime(ctd.date.new, format = "%Y%m%d") #change to posix* format
+  posix.date[day.chng] <- posix.date[day.chng] + days(1) #add one day for those that need changing
+  date.str.new <- substr(posix.date, start = 1, stop = 10) #read only date values from string
+  date.str.new  <- str_replace_all(date.str.new, "[^[:alnum:]]", "") #remove dashes from dates
+  
+  
+  return(list(ctd.date.end = date.str.new, ctd.time = time.str))
+}
+
 
 for (i in 1:nrow(ctd.info)){
   tryCatch({
@@ -71,26 +151,9 @@ for (i in 1:nrow(ctd.info)){
     ctd.end.time.new <- ChangeEndTime(ctd.info, ctd.date.new, h = 1, m = 0, ctd.start.time.new)$ctd.time
     ctd.date.end     <- ChangeEndTime(ctd.info, ctd.date.new, h = 1, m = 0, ctd.start.time.new)$ctd.date.end
     
-    #write echoview region definitions file for the CTD region
-    line_1 <- paste("EVRG 7 5.4.96.24494", sep = "")
-    line_2 <- "1"
-    line_3 <- ""
-    line_4 <- paste("13 4 1 0 3 -1 1", ctd.date.new[i], ctd.start.time.new[i],  "0", ctd.date.end[i], ctd.end.time.new[i], "250", sep = " ")
-    line_5 <- "0"
-    line_6 <- "0"
-    line_7 <- "CTD class"
-    line_8 <- paste(ctd.date.new[i], ctd.start.time.new[i],  "0", ctd.date.new[i], ctd.start.time.new[i],  "250", ctd.date.end[i], ctd.end.time.new[i], "250", ctd.date.end[i], ctd.end.time.new[i], "0", "1", sep = " ")
-    line_9 <- paste("CTD_", i, sep = "")
-    file_lines <- c(line_1, line_2, line_3, line_4, line_5, line_6, line_7, line_8, line_9)
-    
-    dummy.def <- file(paste("G:/Region_definitions_files/region_def_file_stn_", i, ".evr", sep = ""), 'w')
-    for (j in 1:9){
-      writeLines(file_lines[j], con = dummy.def)
-    }
-    close(dummy.def)
-    
+  
     #import the region definitions file into Echoview
-    EVImportRegionDef(EVFile, paste("G:/Region_definitions_files/region_def_file_stn_", i, ".evr", sep = ""), line_9)
+    EVImportRegionDef(EVFile, paste("~//region_def_file_stn_", i, ".evr", sep = ""), line_9)
     
     #change grid of 38kHz and 120kHz to 5m * 50 pings
     varObj = EVAcoVarNameFinder(EVFile, acoVarName = "38H hri ex noise")$EVVar
