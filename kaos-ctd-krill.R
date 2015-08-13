@@ -318,7 +318,7 @@ roc.curve(threshold, print = TRUE)
 ROC.curve <- Vectorize(roc.curve)
 M.ROC <- ROC.curve(seq(0, 1, by = 0.01))
 
-plot(M.ROC[1, ], M.ROC[2, ], col = "grey", lwd = 2, type = "l", xlab = "False Positive Rate", ylab = "True Positive Rate")
+plot(M.ROC[1, ], M.ROC[2, ], lwd = 2, type = "l", xlab = "False Positive Rate", ylab = "True Positive Rate")
 title("ROC curve")
 
 #calculate the area under the ROC curve (0.5 = bad, 1 = perfect)
@@ -333,6 +333,7 @@ par(mfrow = c(1, 3))
 plot(effect("oxy", mod = pa.lm))
 plot(effect("sal", mod = pa.lm))
 plot(effect("depth", mod = pa.lm))
+
 
 
 #-------------------------- PLOTS ON NATURAL SCALE ----------------------------#
@@ -382,4 +383,11 @@ for(i in 1:nlevels(d$stn)) {
 }
 
 text(d$oxy, exp(d$p), d$stn, col = as.numeric(d$stn))
+
+
+
+
+
+
+
 
