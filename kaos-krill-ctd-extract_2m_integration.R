@@ -36,8 +36,12 @@ for (i in c(4, 6, 7, 8, 9)) {
   krill_120$Time_S <- chron(times. = krill_120$Time_S, format = "h:m:s")
   krill_120$Time_E <- chron(times. = krill_120$Time_E, format = "h:m:s")
   
-  krill_38 <- krill_38[krill_38$Time_S > start_time & krill_38$Time_E < (bottom_time + 0.025), ]  
-  krill_120 <- krill_120[krill_120$Time_S > start_time & krill_120$Time_E < (bottom_time + 0.025), ]  
+  krill_38 <- krill_38[krill_38$Time_S > start_time & krill_38$Time_E < (bottom_time), ]  
+  krill_120 <- krill_120[krill_120$Time_S > start_time & krill_120$Time_E < (bottom_time), ]  
+  
+  if(nrow(krill_38) == 0) {
+    next()
+  }
   
   #remove layers of -1 
   krill_38 <- krill_38[krill_38$Layer > 0, ]
@@ -61,6 +65,7 @@ for (i in c(4, 6, 7, 8, 9)) {
   mvbs <- 10*log10(aggregate(matrix(sv, ncol = 1), by = list(krill_38$Layer), sum, na.rm = T)$V1/table(krill_38$Layer)[1])
   mvbs[mvbs == -Inf] <- NA
   
+
   #convert to density using target strength (kg/m2 per interval)
   p <- 2*10 ^((mvbs - -42.22)/10)*1000
   p[is.na(p)] <- 0
